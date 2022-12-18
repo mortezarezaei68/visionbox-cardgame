@@ -39,7 +39,7 @@ public class GameController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("[action]")]
+    [HttpPut("[action]")]
     public async Task<IActionResult> JoinAsync(JoinGameRequest request, CancellationToken cancellationToken = default)
     {
         await _joinGameService.JoinGameAsync(request, cancellationToken);

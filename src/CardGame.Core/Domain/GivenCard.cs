@@ -4,6 +4,12 @@ namespace CardGame.Core.Domain;
 
 public class GivenCard:EntityAudit
 {
+    public int Id { get; private set; }
+    public int GameId { get; private set; }
+    public CardType CardType { get; private set; }
+    public int Value { get; private set; }
+    public bool HasGone { get; set; }
+    
     public static GivenCard Add(CardType cardType, int value)
     {
         return new GivenCard()
@@ -18,10 +24,6 @@ public class GivenCard:EntityAudit
         HasGone = true;
     }
 
-    public int Id { get; private set; }
-    public int GameId { get; private set; }
-    public CardType CardType { get; private set; }
-    public int Value { get; private set; }
-    public bool HasGone { get; set; }
+
     
 }

@@ -6,10 +6,15 @@ namespace CardGame.Core.Services.Implementations;
 
 public class ConfirmationCardService : IConfirmationCardService
 {
-    public GuessCardResponse IsConfirmedOrLoosed(GuessCardRequest request, string gameBoardIdCookie, Game game, int? nextGameBoardId)
+    public GuessCardResponse IsConfirmedOrLoosed(GuessCardRequest request, string gameBoardIdCookie, Game game,
+        int? nextGameBoardId)
     {
-        return IsConfirmedOrLoose(request, game) ? ConfirmedCard(game, gameBoardIdCookie, nextGameBoardId) : LooseCard(game, nextGameBoardId);
+        if (IsConfirmedOrLoose(request, game))
+            return ConfirmedCard(game, gameBoardIdCookie, nextGameBoardId);
+        
+        return LooseCard(game, nextGameBoardId);
     }
+
     private static bool IsConfirmedOrLoose(GuessCardRequest request, Game game)
     {
         return game.GivenCards.LastOrDefault(a => a.CreatedAt == new DateTime()).Value >
@@ -19,6 +24,7 @@ public class ConfirmationCardService : IConfirmationCardService
                game.GivenCards.LastOrDefault(a => a.CreatedAt != new DateTime()).Value &&
                request.GuessType == GuessType.Lower;
     }
+
     private GuessCardResponse ConfirmedCard(Game game, string gameBoardIdCookie, int? nextGameBoardId)
     {
         game.UpdateCurrentlyRoundScore(int.Parse(gameBoardIdCookie));
@@ -34,13 +40,13 @@ public class ConfirmationCardService : IConfirmationCardService
             UserId = nextGameBoardId
         };
     }
+
     private GuessCardResponse LooseCard(Game game, int? validGameBoardId)
     {
         var lastCardGenerated = game.GivenCards.OrderBy(a => a.CreatedAt).LastOrDefault(a => !a.HasGone);
 
         return new GuessCardResponse
         {
-
             IsFinished = false,
             CardType = lastCardGenerated.CardType,
             IsConfirmed = false,

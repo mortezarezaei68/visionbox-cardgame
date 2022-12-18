@@ -52,6 +52,11 @@ public class Game : EntityAudit
 
     }
 
+    public void UpdateRound()
+    {
+        Round += 1;
+    }
+
     public void StartGame(CardType cardType,int value)
     {
         if (_gameBoards.OrderBy(a => a.CreatedAt).Any(a => IsStarted))

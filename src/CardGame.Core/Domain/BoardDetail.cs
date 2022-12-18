@@ -2,6 +2,9 @@ namespace CardGame.Core.Domain;
 
 public class BoardDetail:EntityAudit
 {
+    public int RoundScore { get; private set; }
+    public int Round { get; private set; }
+    public int Id { get; set; }
     public BoardDetail(int round)
     {
         Round = round;
@@ -13,7 +16,5 @@ public class BoardDetail:EntityAudit
         RoundScore++;
     }
 
-    public int RoundScore { get; private set; }
-    public int Round { get; private set; }
-    public int Id { get; set; }
+
 }

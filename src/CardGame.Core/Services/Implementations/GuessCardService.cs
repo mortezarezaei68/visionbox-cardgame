@@ -39,27 +39,36 @@ public class GuessCardService : IGuessCardService
         ValidateUserTurn(game, currentGameBoardIdCookie);
 
 
-        var transaction = await _unitOfWork.BeginTransactionAsync();
-
-        game.GenerateNewCard(GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().cardType,
-            GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().value);
-
-        var nextGameBoard = game.GameBoards.OrderBy(a => a.CreatedAt).LastOrDefault(a => !a.IsTurn);
-
-        _guessCardResponse=_confirmationCardService.IsConfirmedOrLoosed(request, currentGameBoardIdCookie, game, nextGameBoard?.Id);
-
-
-        if (game.GameBoards.All(a => a.IsTurn))
+        try
         {
-            FinishedGame(game, _guessCardResponse);
-        }
-        else
-        {
-            game.UpdateGameTurnBoard(nextGameBoard);
-        }
+            var transaction = await _unitOfWork.BeginTransactionAsync();
 
-        _repository.Update(game);
-        await _unitOfWork.CommitAsync(transaction);
+            game.GenerateNewCard(GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().cardType,
+                GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().value);
+
+            var nextGameBoard = game.GameBoards.OrderBy(a => a.CreatedAt).LastOrDefault(a => !a.IsTurn);
+
+            _guessCardResponse=_confirmationCardService.IsConfirmedOrLoosed(request, currentGameBoardIdCookie, game, nextGameBoard?.Id);
+
+
+            if (game.GameBoards.All(a => a.IsTurn))
+            {
+                FinishedGame(game, _guessCardResponse);
+            }
+            else
+            {
+                game.UpdateGameTurnBoard(nextGameBoard);
+            }
+
+            _repository.Update(game);
+            await _unitOfWork.CommitAsync(transaction);
+        }
+        catch (Exception e)
+        {
+            _unitOfWork.RollbackTransaction();
+            Console.WriteLine(e);
+            throw;
+        }
 
 
         return _guessCardResponse;
@@ -77,6 +86,14 @@ public class GuessCardService : IGuessCardService
 
     private void FinishedGame(Game game, GuessCardResponse? currentGame)
     {
+        foreach (var gameGameBoard in game.GameBoards)
+        {
+            if (gameGameBoard.BoardDetails.Count != 0 &&
+                gameGameBoard.BoardDetails.FirstOrDefault(a => a.Round == game.Round)?.RoundScore > 0)
+            {
+                game.UpdateRoundScore(gameGameBoard.Id);
+            }
+        }
         if (game.GivenCards.Count == 53)
         {
             game.UpdateFinishedState();
@@ -88,16 +105,10 @@ public class GuessCardService : IGuessCardService
                 if (!gameGameBoard.IsMain)
                     gameGameBoard.TurnOver();
             currentGame.RoundFinished = true;
+            game.UpdateRound();
         }
 
-        foreach (var gameGameBoard in game.GameBoards)
-        {
-            if (gameGameBoard.BoardDetails.Count != 0 &&
-                gameGameBoard.BoardDetails.FirstOrDefault(a => a.Round == game.Round).RoundScore > 0)
-            {
-                game.UpdateRoundScore(gameGameBoard.Id);
-            }
-        }
+
 
 
         currentGame.ScoreResponses = game.GameBoards.Select(a => new ScoreResponse
@@ -118,6 +129,6 @@ public class GuessCardRequestValidation : AbstractValidator<GuessCardRequest>
 {
     public GuessCardRequestValidation()
     {
-        RuleFor(p => p.GuessType).NotEmpty().NotNull();
+        RuleFor(p => p.GuessType).NotNull();
     }
 }
