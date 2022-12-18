@@ -8,7 +8,7 @@ public class GivenCard:EntityAudit
     public int GameId { get; private set; }
     public CardType CardType { get; private set; }
     public int Value { get; private set; }
-    public bool HasGone { get; set; }
+    public bool HasGone { get; private set; }
     
     public static GivenCard Add(CardType cardType, int value)
     {

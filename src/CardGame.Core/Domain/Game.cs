@@ -17,7 +17,6 @@ public class Game : EntityAudit
 
     public Game()
     {
-        
     }
 
     public Game(bool isMain, string fullName)
@@ -27,7 +26,6 @@ public class Game : EntityAudit
 
     public GameBoard UpdateUserList(string fullName)
     {
-
         var gameBoard = GameBoard.AddUserToBoard(false, fullName);
 
         _gameBoards.Add(gameBoard);
@@ -35,7 +33,7 @@ public class Game : EntityAudit
         return gameBoard;
     }
 
-    public void GenerateNewCard(CardType cardType,int value)
+    public void GenerateNewCard(CardType cardType, int value)
     {
         if (_givenCards.Count > 53) return;
 
@@ -47,9 +45,8 @@ public class Game : EntityAudit
 
         var card = GivenCard.Add(cardType,
             value);
-        
-        _givenCards.Add(card);
 
+        _givenCards.Add(card);
     }
 
     public void UpdateRound()
@@ -57,7 +54,7 @@ public class Game : EntityAudit
         Round += 1;
     }
 
-    public void StartGame(CardType cardType,int value)
+    public void StartGame(CardType cardType, int value)
     {
         if (_gameBoards.OrderBy(a => a.CreatedAt).Any(a => IsStarted))
             throw new Exception("the game is started");
@@ -68,7 +65,7 @@ public class Game : EntityAudit
         IsFinished = false;
         Round += 1;
 
-        GenerateNewCard(cardType,value);
+        GenerateNewCard(cardType, value);
 
         var gameAdmin = GameBoards.FirstOrDefault(a => a.IsMain);
 
@@ -79,7 +76,7 @@ public class Game : EntityAudit
     {
         gameBoard.TakeTurn();
     }
-    
+
 
     public void UpdateCurrentlyRoundScore(int id)
     {
@@ -95,7 +92,7 @@ public class Game : EntityAudit
         var gameBoard = _gameBoards.FirstOrDefault(a => a.Id == gameBoardId);
         if (gameBoard is null)
             throw new Exception("there is not any Main User In this GameBoard");
-        
+
         gameBoard.UpdateRoundScore();
     }
 
@@ -112,5 +109,8 @@ public class Game : EntityAudit
     {
         IsFinished = true;
         FinishedDate = DateTime.Now;
+        _gameBoards.ForEach(a => a.TurnOver());
+        _givenCards.ForEach(a =>
+            a.UpdateGivenCardState());
     }
 }

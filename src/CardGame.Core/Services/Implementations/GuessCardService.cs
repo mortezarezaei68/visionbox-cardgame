@@ -84,7 +84,7 @@ public class GuessCardService : IGuessCardService
     }
 
 
-    private void FinishedGame(Game game, GuessCardResponse? currentGame)
+    private void FinishedGame(Game game, GuessCardResponse? currentGameResponse)
     {
         foreach (var gameGameBoard in game.GameBoards)
         {
@@ -97,21 +97,21 @@ public class GuessCardService : IGuessCardService
         if (game.GivenCards.Count == 53)
         {
             game.UpdateFinishedState();
-            currentGame.IsFinished = true;
+            currentGameResponse.IsFinished = true;
         }
         else
         {
             foreach (var gameGameBoard in game.GameBoards)
                 if (!gameGameBoard.IsMain)
                     gameGameBoard.TurnOver();
-            currentGame.RoundFinished = true;
+            currentGameResponse.RoundFinished = true;
             game.UpdateRound();
         }
 
 
 
 
-        currentGame.ScoreResponses = game.GameBoards.Select(a => new ScoreResponse
+        currentGameResponse.ScoreResponses = game.GameBoards.Select(a => new ScoreResponse
         {
             FullName = a.FullName,
             Score = a.Score
