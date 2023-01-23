@@ -1,9 +1,14 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Reflection;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
+using Swashbuckle.AspNetCore.SwaggerUI;
+using Unchase.Swashbuckle.AspNetCore.Extensions.Extensions;
+using Unchase.Swashbuckle.AspNetCore.Extensions.Options;
 
 namespace CardGame.Core.Extensions
 {
@@ -27,13 +32,37 @@ namespace CardGame.Core.Extensions
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(c =>
             {
-                using var serviceProvider = services.BuildServiceProvider();
-                var provider = serviceProvider.GetRequiredService<IApiVersionDescriptionProvider>();
-                foreach (var description in provider.ApiVersionDescriptions)
+                var securitySchema = new OpenApiSecurityScheme
                 {
-                    c.SwaggerDoc(description.GroupName, CreateInfoForApiVersion(description));
-                }
+                    Description =
+                        "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                };
+                c.AddSecurityDefinition("Bearer", securitySchema);
+                c.OperationFilter<SecurityRequirementsOperationFilter>();
+                c.AddEnumsWithValuesFixFilters(o =>
+                {
+                    // add descriptions from DescriptionAttribute or xml-comments to fix enums (add 'x-enumDescriptions' or its alias from XEnumDescriptionsAlias for schema extensions) for applied filters
+                    o.IncludeDescriptions = true;
+
+                    // get descriptions from DescriptionAttribute then from xml-comments
+                    o.DescriptionSource = DescriptionSources.DescriptionAttributesThenXmlComments;
+                    var xmlFiles = Directory.GetFiles(AppContext.BaseDirectory, "*.xml", SearchOption.TopDirectoryOnly)
+                        .ToList();
+                    // get descriptions from xml-file comments on the specified path
+                    xmlFiles.ForEach(xmlFile => o.IncludeXmlCommentsFrom(xmlFile));
+                });
             });
+            services.AddEndpointsApiExplorer();
+            services.ConfigureOptions<ConfigureSwaggerOptions>();
         }
 
         public static void UseCustomSwagger(this IApplicationBuilder app)
@@ -45,27 +74,22 @@ namespace CardGame.Core.Extensions
             app.UseSwagger();
             app.UseSwaggerUI(options =>
             {
+                var projectName = Assembly.GetEntryAssembly()!.GetName().Name!;
+                options.DocumentTitle = $"VisionBox - {projectName} API document";
+                options.DocExpansion(DocExpansion.None);
+                options.DisplayRequestDuration();
+                options.EnableDeepLinking();
+                options.EnableFilter();
+                options.ShowExtensions();
+                options.EnableValidator();
+
+                // make group name list for swagger ui
                 foreach (var description in provider.ApiVersionDescriptions)
                 {
                     options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
-                        description.GroupName.ToUpperInvariant());
+                        $"{projectName}_{description.GroupName.ToUpperInvariant()}");
                 }
             });
-        }
-        private static OpenApiInfo CreateInfoForApiVersion(ApiVersionDescription description)
-        {
-            var info = new OpenApiInfo()
-            {
-                Title = "TestSwagger API",
-                Version = description.ApiVersion.ToString()
-            };
-
-            if (description.IsDeprecated)
-            {
-                info.Description += " This API version has been deprecated.";
-            }
-
-            return info;
         }
     }
 }
