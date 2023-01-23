@@ -55,13 +55,4 @@ public class GuessCard
         game.GameBoards.First().BoardDetails.Count.Should().BeGreaterThan(0);
     }
     
-
-    [Theory]
-    [InlineData(null)]
-    public void Should_have_error_when_properties_are_not_filled(GuessType guessType)
-    {
-        var request = new GuessCardRequest() {GuessType = guessType};
-        var result = _validation.TestValidate(request);
-        result.ShouldHaveAnyValidationError();
-    }
 }

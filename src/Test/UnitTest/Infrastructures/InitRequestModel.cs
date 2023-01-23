@@ -29,8 +29,8 @@ public static class InitRequestModel
         var adminUser = game.GameBoards.First();
         adminUser.Id = 1;
         game.UpdateUserList("SubUser");
-        game.StartGame(GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().cardType,
-            GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().value);
+        var card = GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke();
+        game.StartGame(card.cardType, card.value);
         adminUser.TurnOver();
         return game;
     }

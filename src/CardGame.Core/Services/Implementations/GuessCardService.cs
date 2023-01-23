@@ -43,8 +43,8 @@ public class GuessCardService : IGuessCardService
         {
             var transaction = await _unitOfWork.BeginTransactionAsync();
 
-            game.GenerateNewCard(GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().cardType,
-                GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().value);
+            var card = GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke();
+            game.GenerateNewCard(card.cardType, card.value);
 
             var nextGameBoard = game.GameBoards.OrderBy(a => a.CreatedAt).LastOrDefault(a => !a.IsTurn);
 

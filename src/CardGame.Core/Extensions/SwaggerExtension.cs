@@ -16,9 +16,7 @@ namespace CardGame.Core.Extensions
                 o.AssumeDefaultVersionWhenUnspecified = true;
                 o.DefaultApiVersion = new ApiVersion(1, 0);
                 o.ReportApiVersions = true;
-                o.ApiVersionReader = ApiVersionReader.Combine(
-                    new QueryStringApiVersionReader("api-version")
-                );
+                o.ApiVersionReader = new UrlSegmentApiVersionReader();
             });
             services.AddVersionedApiExplorer(
                 options =>

@@ -35,9 +35,8 @@ public class StartGameService:IStartGameService
                 throw new Exception("the game has less than 2 user");
             
             var transaction = await _unitOfWork.BeginTransactionAsync();
-            
-            game.StartGame(GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().cardType,
-                GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke().value);
+            var card = GenerateCardRandomly.GetNextUniqueIntegerFunc(game.GivenCards).Invoke();
+            game.StartGame(card.cardType, card.value);
             
             _repository.Update(game);
             await _unitOfWork.CommitAsync(transaction);
